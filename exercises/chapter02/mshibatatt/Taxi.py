@@ -1,10 +1,14 @@
 # listing_2_5: Q learning for Taxi example
 import gym
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import seaborn as sns
 import random
 
 class Taxi:
-    def __init__(self, alpha = 0.2, gamma = 0.7, epsilon = 0.1, method = "Q-learning", quiet = False) -> None:
+    def __init__(self, alpha = 0.2, gamma = 0.7, epsilon = 0.1,
+                 method = "Q-learning", quiet = False, plot_Q = False) -> None:
         # Environment Setup
         self.env = gym.make("Taxi-v3")
         self.env.reset()
@@ -15,7 +19,9 @@ class Taxi:
         self.epsilon = epsilon # epsilon greedy
         # "Q" or "SARSA"
         self.method = method 
+        # print setting
         self.quiet = quiet
+        self.plot_Q = plot_Q
 
     def reset_learning(self):
         # Q[state, action] table implementation
@@ -25,8 +31,11 @@ class Taxi:
     def __str__(self):
         return self.env.render(mode="ansi")
 
-    def train(self, N = 1000):
-        self.reset_learning()
+    def train(self, N = 1000, keep_table = False):
+        if not keep_table:
+            self.reset_learning()
+        
+        # learning
         for episode in range(N):
             if self.method == "Q-learning":
                 self.Q_one_episode()
@@ -35,8 +44,12 @@ class Taxi:
             else:
                 raise ValueError("self.method should be 'Q-learning' or 'SARSA'")
 
-            if episode % 100 == 0 and not self.quiet:
-                print("Episode {} Total Reward:{}". format(episode,self.learning_log[-1]))
+            if episode * 10 % N == 0:
+                if not self.quiet:
+                    print("Episode {} Total Reward:{}". format(episode, self.learning_log[-1]))
+                if self.plot_Q:
+                    fig, ax = self.plot_policy()
+                    plt.show()
 
     def Q_one_episode(self):
         done = False
@@ -104,3 +117,17 @@ class Taxi:
         print(f"Average reward per episode {total_reward / ep}")
         print(f"Average timesteps per episode {total_epochs / ep}")
         print(f"Average penalites per episode {total_penalties / ep}")
+
+    def plot_policy(self):
+        fig, ax = plt.subplots(5, 4)
+        cbar_ax = fig.add_axes([.91, .3, .03, .4])
+        plot_data = np.zeros((5, 4, 5, 5))
+        for s in range(500):
+            taxi_row, taxi_col, pass_loc, dest_idx = self.env.decode(s)
+            plot_data[pass_loc][dest_idx][taxi_row][taxi_col] = np.argmax(self.Q[s])
+        for i in range(5):
+            for j in range(4):
+                sns.heatmap(plot_data[i][j], ax= ax[i][j], vmin = 0, vmax = 5,
+                            cbar = (i+j==0), cbar_ax = cbar_ax if (i+j==0) else None, animated = True)
+                ax[i][j].axis("off")
+        return fig, ax
