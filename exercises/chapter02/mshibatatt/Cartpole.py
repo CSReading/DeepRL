@@ -2,10 +2,10 @@
 import gym
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 import seaborn as sns
 import random
-import sys
+import datetime
+import math
 
 class CartPole:
     def __init__(self, alpha = 0.2, gamma = 0.7, epsilon = 0.1,
@@ -115,31 +115,122 @@ class CartPole:
             current_action = next_action
         self.learning_log = np.append(self.learning_log, total_reward)
 
-    def play(self, ep = 100):
-        # listing_2_6
-        total_reward = 0
-        for _ in range(ep):
+    def play(self, ep = 100, base = "value", time = 0.01):
+        if base == "value":
+            # listing_2_6
+            total_reward = 0
+            for _ in range(ep):
+                state = self.env.reset()
+                state = self.discretize_state(state)
+                done = False
+                while not done:
+                    action = np.argmax(self.Q[state])
+                    state, reward, done, info = self.env.step(action)
+                    state = self.discretize_state(state)
+                    total_reward += reward
+
+            print(f"Results after {ep} episodes:")
+            print(f"Average reward per episode {total_reward / ep}")
+        elif base == "policy":
+            total_reward = 0
+            for _ in range(ep):
+                state = self.env.reset()
+                done = False
+                while not done:
+                    action = self.policy_based_learning(state, time)
+                    state, reward, done, info = self.env.step(action)
+                    total_reward += reward
+
+            print(f"Results after {ep} episodes:")
+            print(f"Average reward per episode {total_reward / ep}")
+        else:
+            raise ValueError("base should be 'value' or 'policy'!")
+    
+    def show(self, base = "value"):
+        if base == "value":
             state = self.env.reset()
             state = self.discretize_state(state)
+            reward = 0
             done = False
             while not done:
+                self.env.render()
                 action = np.argmax(self.Q[state])
                 state, reward, done, info = self.env.step(action)
                 state = self.discretize_state(state)
-                total_reward += reward
+            self.env.close()
+        elif base == "policy":
+            state = self.env.reset()
+            reward = 0
+            done = False
+            while not done:
+                self.env.render()
+                action = self.policy_based_learning(state)
+                state, reward, done, info = self.env.step(action)
+            self.env.close()
+        else:
+            raise ValueError("base should be 'value' or 'policy'!")
 
-        print(f"Results after {ep} episodes:")
-        print(f"Average reward per episode {total_reward / ep}")
-    
-    def show(self):
-        state = self.env.reset()
-        state = self.discretize_state(state)
-        reward = 0
-        done = False
-        while not done:
-            self.env.render()
-            action = np.argmax(self.Q[state])
-            state, reward, done, info = self.env.step(action)
-            state = self.discretize_state(state)
-        self.env.close()
+    def simulate(self, state, action):
+        x, x_dot, theta, theta_dot = state
+        force = 10.0 if action == 1 else -10.0
+        costheta = math.cos(theta)
+        sintheta = math.sin(theta)
 
+        temp = (force + 0.05 * theta_dot ** 2 * sintheta) / 1.1
+        thetaacc = (9.8 * sintheta - costheta * temp) / (
+            0.5 * (4.0 / 3.0 - 0.1 * costheta**2 / 1.1)
+        )
+        xacc = temp - 0.05 * thetaacc * costheta / 1.1
+        
+        x = x + 0.02 * x_dot
+        x_dot = x_dot + 0.02 * xacc
+        theta = theta + 0.02 * theta_dot
+        theta_dot = theta_dot + 0.02 * thetaacc
+
+        # Angle at which to fail the episode
+        self.theta_threshold_radians = 12 * 2 * math.pi / 360
+        self.x_threshold = 2.4
+
+        done = bool(x < -2.4 
+            or x > 2.4 
+            or theta < -12 * 2 * math.pi / 360 
+            or theta > 12 * 2 * math.pi / 360
+        )
+        reward = 1.0 if not done else 0.0
+
+        return np.array([x, x_dot, theta, theta_dot], dtype=np.float32), reward, done, {}
+
+    def policy_based_learning(self, state, time = 0.01):
+        # Monte Carlo method
+        reward_0, reward_1 = 0, 0
+        delta = datetime.timedelta(seconds = time)
+        
+        counter = 0
+        begin = datetime.datetime.now()
+        while datetime.datetime.now() - begin < delta:
+            counter += 1
+            state_simulate, reward, done, info = self.simulate(state, 0) 
+            while not done and datetime.datetime.now() - begin < delta:
+                state_simulate, one_reward, done, info = self.simulate(state_simulate, np.random.choice(2))
+                reward += one_reward
+            reward_0 += reward
+        
+        reward_0 /= counter
+        
+        counter = 1
+        begin = datetime.datetime.now()
+        while datetime.datetime.now() - begin < delta:
+            counter += 1
+            state_simulate, reward, done, info = self.simulate(state, 1) 
+            while not done and datetime.datetime.now() - begin < delta:
+                state_simulate, one_reward, done, info = self.simulate(state_simulate, np.random.choice(2))
+                reward += one_reward
+            reward_1 += reward
+        
+        reward_1 /= counter
+
+        # print(reward_0, reward_1)
+        if reward_1 >= reward_0:
+            return 1
+        else:
+            return 0
