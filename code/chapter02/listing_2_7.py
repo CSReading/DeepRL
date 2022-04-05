@@ -1,7 +1,8 @@
 # SARSA for OpenAI Gym Taxi environment
+import random
+
 import gym
 import numpy as np
-import random
 
 # Environment Setup
 env = gym.make("Taxi-v3")
@@ -28,12 +29,13 @@ for episode in range(1000):
             next_action = env.action_space.sample()  # Explore state space
         else:
             next_action = np.argmax(Q[next_state])  # Exploit learned values
-        sarsa_value = Q[next_state,next_action]
+        sarsa_value = Q[next_state, next_action]
         old_value = Q[current_state, current_action]
 
-        new_value = old_value + alpha * (reward + gamma * sarsa_value - old_value)
+        new_value = old_value + alpha * \
+            (reward + gamma * sarsa_value - old_value)
 
-        Q[current_state,current_action] = new_value
+        Q[current_state, current_action] = new_value
         total_reward += reward
         current_state = next_state
         current_action = next_action
