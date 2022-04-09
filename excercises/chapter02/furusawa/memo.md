@@ -7,7 +7,7 @@
   - 現実の多くの場合はそれらが分からない
 - その場合は、Valueを直接計算することが出来ないので「学習」をして真の値を見つけていく（観察したVから真のVを学習する）
   - 学習をするためにはexploitだけではなくexploreもする必要がある（epsilon-greedy method）
-  - 予測で学習するか実績で学習するか（Monte-Carlo method - TD method）
+  - 予測で学習するか実績で学習するか（TD method）
   - policy base(on-policy)かvalue base(off-policy)か
 - 「戦略の学習」っていうと仰々しいけど、実質はValueとかQ値の学習ってイメージ
 
@@ -19,3 +19,17 @@
   - off-policyとon-policyの違いはどこで重要になるのか？
   - on-policyの方が慎重ってこと？
 - SARSAでは必ずしも`np.argmax(self.Q[next_state])`の必要はないよね？
+
+### 勉強会のメモ
+- 教科書の方は、SARSAのpolicyとしてepsilon-greedyを採用している
+  - なので必ずしも`np.argmax(self.Q[next_state])`の必要はない
+  - SARSA自体はpolicyの形を指定するものではない
+- Q-learningとSARSAの違い
+  - epsilonが0のときは両者は同じになる
+  - SARSAは学習のときに、stateが変わった後に探索（=ベストじゃないかもしれない、、罰則をくらうかもしれない）するかもしれないことを考慮して行動を決める
+  - Q-learningは、stateが変わった後にベストな戦略を取れると思って行動を決める
+  - なのでイメージとしてはSARSAの方が慎重に戦略を更新していくような感じ
+- Q-learningでalpha=1ならValue Iterationは同じ？？
+  - Value Iterationは遷移関数や報酬関数が分かっているときに使える
+- 罰則を大きくするとちゃんと学習できそう
+  - 罰則を大きくすると将来の罰則を恐れて現時点からちゃんと行動するようなイメージ？
