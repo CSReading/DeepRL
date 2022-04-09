@@ -6,6 +6,7 @@ import seaborn as sns
 import random
 import datetime
 import math
+import argparse
 
 class CartPole:
     def __init__(self, alpha = 0.2, gamma = 0.7, epsilon = 0.1,
@@ -110,7 +111,7 @@ class CartPole:
 
             new_value = old_value + self.alpha * (reward + self.gamma * sarsa_value - old_value)
             self.Q[current_state, current_action] = new_value
-            total_reward += reward
+            total_reward += reward if reward == 1.0 else -200
             current_state = next_state
             current_action = next_action
         self.learning_log = np.append(self.learning_log, total_reward)
@@ -205,7 +206,7 @@ class CartPole:
         reward_0, reward_1 = 0, 0
         delta = datetime.timedelta(seconds = time)
         
-        counter = 0
+        counter = 1
         begin = datetime.datetime.now()
         while datetime.datetime.now() - begin < delta:
             counter += 1
@@ -234,3 +235,15 @@ class CartPole:
             return 1
         else:
             return 0
+
+if __name__=='__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("base", help="'value' or 'policy'", type = str)
+    args = parser.parse_args()
+
+    CP = CartPole()
+    if args.base == "value":
+        CP.train()
+        CP.show(args.base)
+    elif args.base == "policy":
+        CP.show(args.base)
