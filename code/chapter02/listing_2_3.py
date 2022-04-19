@@ -1,15 +1,18 @@
 import gym
 import numpy as np
 
+
 def iterate_value_function(v_inp, gamma, env):
     ret = np.zeros(env.nS)
     for sid in range(env.nS):
         temp_v = np.zeros(env.nA)
         for action in range(env.nA):
             for (prob, dst_state, reward, is_final) in env.P[sid][action]:
-                temp_v[action] += prob*(reward + gamma*v_inp[dst_state]*(not is_final))
+                temp_v[action] += prob * \
+                    (reward + gamma * v_inp[dst_state] * (not is_final))
         ret[sid] = max(temp_v)
     return ret
+
 
 def build_greedy_policy(v_inp, gamma, env):
     new_policy = np.zeros(env.nS)
@@ -17,9 +20,11 @@ def build_greedy_policy(v_inp, gamma, env):
         profits = np.zeros(env.nA)
         for action in range(env.nA):
             for (prob, dst_state, reward, is_final) in env.P[state_id][action]:
-                profits[action] += prob*(reward + gamma*v_inp[dst_state])  # v[dst_state] は v_inp のタイポ?
+                # v[dst_state] は v_inp のタイポ?
+                profits[action] += prob * (reward + gamma * v_inp[dst_state])
         new_policy[state_id] = np.argmax(profits)
     return new_policy
+
 
 env = gym.make('Taxi-v3')
 gamma = 0.9
@@ -37,7 +42,8 @@ for t_rounds in range(n_rounds):
         v = iterate_value_function(v, gamma, env)
         if np.all(v == v_old):
             break
-    policy = build_greedy_policy(v, gamma, env).astype(int)  # np.int だと warning が出るので int に直した
+    policy = build_greedy_policy(v, gamma, env).astype(
+        int)  # np.int だと warning が出るので int に直した
 
     # apply policy
     for t in range(1000):
