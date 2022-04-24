@@ -1,3 +1,4 @@
 gym
 numpy
 pygame
+tensorflow-aarch64 -f https://tf.kmtea.eu/whl/stable.html
