@@ -3,6 +3,9 @@ services:
   game:
     build: .
     volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix
+      # - /tmp/.X11-unix:/tmp/.X11-unix
+      - $HOME/.Xauthority:/root/.Xauthority
     environment:
-      - DISPLAY=$DISPLAY
+      - DISPLAY=localhost:10.0
+      - XAUTHORITY=/root/.Xauthority
+    network_mode: "host"

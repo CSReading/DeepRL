@@ -10,3 +10,4 @@ tensorflow
 mlflow
 stable-baselines3[extra]
 pyglet
+ale-py==0.7.4
