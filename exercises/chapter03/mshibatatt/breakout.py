@@ -3,7 +3,7 @@ from stable_baselines3.common.env_util import make_atari_env
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3 import DQN
 
-def main(lr, ex, rb, fr, t, seed, show_result, name):
+def main(lr, ex, rb, fr, t, seed, show_result, name, save):
     env = make_atari_env('BreakoutNoFrameskip-v4')
     model = DQN(
         'CnnPolicy',
@@ -15,6 +15,9 @@ def main(lr, ex, rb, fr, t, seed, show_result, name):
         train_freq=fr,
         seed=seed)
     model.learn(total_timesteps = t,  tb_log_name=name)
+    if save:
+        model.save("./" + name)
+
     mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=10)
     print(f'mean reward: {mean_reward}, s.d. of reward: {std_reward}')
     obs = env.reset()
@@ -76,8 +79,14 @@ if __name__=='__main__':
         default=None,
         help="model name for tensorboard",
     )
+    parser.add_argument(
+        "-save",
+        type=bool,
+        default=False,
+        help="flag if save trained model",
+    )
     args = parser.parse_args()
     if args.name is None:
         args.name = 'DQN'
     
-    main(args.lr, args.ex, args.rb, args.fr, args.t, args.seed, args.show, args.name)
+    main(args.lr, args.ex, args.rb, args.fr, args.t, args.seed, args.show, args.name, args.save)
