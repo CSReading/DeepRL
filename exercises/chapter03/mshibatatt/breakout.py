@@ -14,8 +14,8 @@ def main(lr, ex, rb, fr, t, seed, show_result, name):
         buffer_size=rb,
         train_freq=fr,
         seed=seed)
-    model.learn(total_timesteps = t)
-    mean_reward, std_reward = evaluate_policy(model, model.get_env(), n_eval_episodes=10)
+    model.learn(total_timesteps = t,  tb_log_name=name)
+    mean_reward, std_reward = evaluate_policy(model, env, n_eval_episodes=10)
     print(f'mean reward: {mean_reward}, s.d. of reward: {std_reward}')
     obs = env.reset()
 
@@ -77,5 +77,7 @@ if __name__=='__main__':
         help="model name for tensorboard",
     )
     args = parser.parse_args()
+    if args.name is None:
+        args.name = 'DQN'
     
     main(args.lr, args.ex, args.rb, args.fr, args.t, args.seed, args.show, args.name)

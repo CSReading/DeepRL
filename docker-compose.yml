@@ -3,7 +3,7 @@ services:
   game:
     build: .
     volumes:
-      # - /tmp/.X11-unix:/tmp/.X11-unix # for local
+      - /tmp/.X11-unix:/tmp/.X11-unix
       - $HOME/.Xauthority:/root/.Xauthority # for AWS
     environment:
       - DISPLAY=localhost:10.0
