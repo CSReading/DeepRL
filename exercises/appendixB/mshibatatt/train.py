@@ -85,7 +85,7 @@ if __name__=='__main__':
         "-lr",
         type=float,
         default=0.001,
-        help="epochs",
+        help="learning rate",
     )
     parser.add_argument(
         "-opt",

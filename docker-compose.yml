@@ -3,9 +3,9 @@ services:
   game:
     build: .
     volumes:
-      # - /tmp/.X11-unix:/tmp/.X11-unix
-      - $HOME/.Xauthority:/root/.Xauthority
+      # - /tmp/.X11-unix:/tmp/.X11-unix # for local
+      - $HOME/.Xauthority:/root/.Xauthority # for AWS
     environment:
       - DISPLAY=localhost:10.0
-      - XAUTHORITY=/root/.Xauthority
-    network_mode: "host"
+      - XAUTHORITY=/root/.Xauthority # for AWS
+    network_mode: "host" # for AWS
