@@ -8,3 +8,6 @@ seaborn
 torch
 tensorflow
 mlflow
+stable-baselines3[extra]
+pyglet==1.2.4
+ale-py==0.7.4

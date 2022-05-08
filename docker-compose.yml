@@ -4,5 +4,8 @@ services:
     build: .
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
+      - $HOME/.Xauthority:/root/.Xauthority # for AWS
     environment:
-      - DISPLAY=$DISPLAY
+      - DISPLAY=localhost:10.0
+      - XAUTHORITY=/root/.Xauthority # for AWS
+    network_mode: "host" # for AWS

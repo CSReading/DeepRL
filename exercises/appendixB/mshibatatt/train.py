@@ -70,31 +70,31 @@ def main(batch_size = 128, epochs = 15, optimizer = "adam", learning_rate = 0.00
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-b",
+        "-b", "--b",
         type=int,
         default=128,
         help="batch_size",
     )
     parser.add_argument(
-        "-e",
+        "-e", "--e",
         type=int,
         default=15,
         help="epochs",
     )
     parser.add_argument(
-        "-lr",
+        "-lr", "--lr",
         type=float,
         default=0.001,
-        help="epochs",
+        help="learning rate",
     )
     parser.add_argument(
-        "-opt",
+        "-opt", "--opt",
         type=str,
         default="adam",
         help="optimizer: adam or SGD",
     )
     parser.add_argument(
-        "-seed",
+        "-seed", "--seed",
         type=int,
         default=None,
         help="seed number default does not set",
