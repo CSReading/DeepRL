@@ -1,4 +1,7 @@
 gym
+gym[atari]
 numpy
 pygame
+pyglet
 tensorflow-aarch64 -f https://tf.kmtea.eu/whl/stable.html
+stable-baselines3
