@@ -6,9 +6,10 @@ from torch.autograd import Variable
 from torch.distributions import Categorical
 import gym
 
-env = gym.make("CartPole-v1")
-# env = gym.make("MountainCar-v0")
-# env = gym.make("MountainCarContinuous-v0")
+title = "CartPole-v1"
+# title = "MountainCar-v0"
+# title = "MountainCarContinuous-v0"
+env = gym.make(title)
 
 # Create Neural Network model
 #Hyperparameters
@@ -89,7 +90,7 @@ def update_policy():
     policy.reward_episode= []
 
 def main(episodes):
-    running_reward = 10
+    running_reward = float('inf')
     for episode in range(episodes):
         state = env.reset() # Reset environment and record the starting state
         done = False       
@@ -101,9 +102,11 @@ def main(episodes):
             policy.reward_episode.append(reward)
             if done:
                 break
-        
+
         # Used to determine when the environment is solved.
-        running_reward = (running_reward * 0.99) + (time * 0.01)
+        episode_reward = sum(policy.reward_episode)
+        running_reward = running_reward * 0.99 + episode_reward * 0.01 if running_reward < float('inf') else episode_reward 
+        
         update_policy()
 
         if episode % 50 == 0:
