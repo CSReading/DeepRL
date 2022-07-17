@@ -19,12 +19,13 @@ class CartPole:
         self.gamma = gamma# discount factor
         self.alpha = alpha # learning rate
         self.epsilon = epsilon # epsilon greedy
-        # "Q" or "SARSA"
+        self.theta = np.zeros(self.env.observation_space.shape) # for policy based learning
+        # "Q-learning" or "SARSA"
         self.method = method 
         self.state_split_num = state_split_num
         # print setting
         self.quiet = quiet
-        self.plot_Q = plot_Q
+        self.plot_Q = plot_Q if self.method in ["Q-learning", "SARSA"] else False
 
     def reset_learning(self):
         # Q[state, action] table implementation
@@ -56,6 +57,8 @@ class CartPole:
                 self.Q_one_episode()
             elif self.method == "SARSA":
                 self.SARSA_one_episode()
+            elif self.method == "policy":
+                self.polcy_base_one_step()
             else:
                 raise ValueError("self.method should be 'Q-learning' or 'SARSA'")
 
@@ -132,13 +135,27 @@ class CartPole:
 
             print(f"Results after {ep} episodes:")
             print(f"Average reward per episode {total_reward / ep}")
+
         elif base == "policy":
             total_reward = 0
             for _ in range(ep):
                 state = self.env.reset()
                 done = False
                 while not done:
-                    action = self.policy_based_learning(state, time)
+                    action = np.random.choice(2, p=self.policy_function_(state))
+                    state, reward, done, info = self.env.step(action)
+                    total_reward += reward
+
+            print(f"Results after {ep} episodes:")
+            print(f"Average reward per episode {total_reward / ep}")
+
+        elif base == "MC":
+            total_reward = 0
+            for _ in range(ep):
+                state = self.env.reset()
+                done = False
+                while not done:
+                    action = self.monte_carlo_learning(state, time)
                     state, reward, done, info = self.env.step(action)
                     total_reward += reward
 
@@ -165,11 +182,20 @@ class CartPole:
             done = False
             while not done:
                 self.env.render()
-                action = self.policy_based_learning(state)
+                action = np.random.choice(2, p=self.policy_function_(state))
+                state, reward, done, info = self.env.step(action)
+            self.env.close()
+        elif base == "MC":
+            state = self.env.reset()
+            reward = 0
+            done = False
+            while not done:
+                self.env.render()
+                action = self.monte_carlo_learning(state)
                 state, reward, done, info = self.env.step(action)
             self.env.close()
         else:
-            raise ValueError("base should be 'value' or 'policy'!")
+            raise ValueError("base should be 'value', 'policy' or 'MC'!")
 
     def simulate(self, state, action):
         x, x_dot, theta, theta_dot = state
@@ -201,7 +227,42 @@ class CartPole:
 
         return np.array([x, x_dot, theta, theta_dot], dtype=np.float32), reward, done, {}
 
-    def policy_based_learning(self, state, time = 0.01):
+    def policy_function_(self, state):
+        # return probability based on logistic distribution
+        exp_XB = np.exp(-self.theta.dot(state))
+        p0 = 1 / (1 + exp_XB)
+        return [p0, 1-p0]
+
+    def polcy_base_one_step(self):
+        done = False
+        total_reward = 0
+        state = self.env.reset()
+        counter = 0
+        gradient = np.array([]).reshape((4, 0))
+        reward_history = np.array([]).reshape((0, 0))
+        while not done:
+            prob = self.policy_function_(state)
+            action = np.random.choice(2, p = prob)
+            state, reward, done, info = self.env.step(action) # invoke Gym
+            total_reward += reward
+            counter += 1
+            
+            reward_history = np.append(reward_history, reward)
+            exp_XB = (1 - prob[0]) / prob[0]
+            if action == 0:
+                grad = state * exp_XB / (1 + exp_XB)**2
+            else:
+                grad = -state * exp_XB / (1 + exp_XB)**2
+            
+            gradient = np.append(gradient, grad.reshape((4, 1)), axis=1)
+        
+        # REINFORCE update with baseline elimination (only using 1 epsode..) 
+        expected_grad = gradient.dot(reward_history - total_reward / counter) / counter
+        self.theta = self.theta + self.alpha*expected_grad.reshape(self.env.observation_space.shape)  
+            
+        self.learning_log = np.append(self.learning_log, total_reward)
+
+    def monte_carlo_learning(self, state, time = 0.01):
         # Monte Carlo method
         reward_0, reward_1 = 0, 0
         delta = datetime.timedelta(seconds = time)
@@ -238,12 +299,16 @@ class CartPole:
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("base", help="'value' or 'policy'", type = str)
+    parser.add_argument("base", help="'value', 'policy' or 'MC'(Monte Carlo)", type = str)
     args = parser.parse_args()
 
     CP = CartPole()
     if args.base == "value":
         CP.train()
         CP.show(args.base)
-    elif args.base == "policy":
+    if args.base == "policy":
+        CP.method = args.base
+        CP.train()
+        CP.show(args.base)
+    elif args.base == "MC":
         CP.show(args.base)
