@@ -250,9 +250,9 @@ class CartPole:
             reward_history = np.append(reward_history, reward)
             exp_XB = (1 - prob[0]) / prob[0]
             if action == 0:
-                grad = state * exp_XB / (1 + exp_XB)**2
+                grad = state * exp_XB / (1 + exp_XB)
             else:
-                grad = -state * exp_XB / (1 + exp_XB)**2
+                grad = -state * exp_XB / (1 + exp_XB)
             
             gradient = np.append(gradient, grad.reshape((4, 1)), axis=1)
         
