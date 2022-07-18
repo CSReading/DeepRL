@@ -110,10 +110,6 @@ def main(episodes):
             action = select_action(state)
             # Step through environment using chosen action
             state, reward, done, _ = env.step(action) # Save reward
-            # reward of mountain car is too strict
-            # if title.startswith("MountainCar"):
-            #     temp_reward = max(temp_reward, state[0]+0.5)
-            #     reward += temp_reward
             policy.reward_episode.append(reward)
             if done:
                 break
